@@ -10,24 +10,29 @@ const WALLPAPERS = [
   { label: 'City', value: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1600&q=80' },
 ]
 
+// localStorage key for custom uploaded wallpaper (stored as base64)
+const CUSTOM_WP_KEY = 'kando_wallpaper_custom_b64'
+
 function App() {
   const [search, setSearch] = useState('')
 
-  // Persist dark mode to localStorage
   const [dark, setDark] = useState(() => {
     try { return JSON.parse(localStorage.getItem('kando_dark') ?? 'false') } catch { return false }
   })
 
-  // Persist wallpaper to localStorage
+  // Wallpaper can be a preset URL, a base64 data URL, or null
   const [wallpaper, setWallpaper] = useState(() => {
-    try { return localStorage.getItem('kando_wallpaper') || null } catch { return null }
+    try {
+      const preset = localStorage.getItem('kando_wallpaper') || ''
+      if (preset) return preset
+      // Fall back to custom uploaded image stored as base64
+      return localStorage.getItem(CUSTOM_WP_KEY) || null
+    } catch { return null }
   })
 
-  // Controlled select value so "Upload image..." can be chosen repeatedly
   const [wallpaperSelect, setWallpaperSelect] = useState(() => {
     try {
       const saved = localStorage.getItem('kando_wallpaper') || ''
-      // Only pre-select if it's one of the preset values
       return WALLPAPERS.find(w => w.value === saved) ? saved : ''
     } catch { return '' }
   })
@@ -35,7 +40,6 @@ function App() {
   const [showAbout, setShowAbout] = useState(false)
   const fileInputRef = useRef(null)
 
-  // Persist custom labels to localStorage
   const [customLabels, setCustomLabels] = useState(() => {
     try { return JSON.parse(localStorage.getItem('kando_custom_labels') || '[]') } catch { return [] }
   })
@@ -59,24 +63,36 @@ function App() {
   const handleWallpaperChange = (e) => {
     const val = e.target.value
     if (val === '__upload__') {
-      // Reset select so the same option can be chosen again next time
       setWallpaperSelect('')
       fileInputRef.current.click()
     } else {
       setWallpaperSelect(val)
       setWallpaper(val || null)
       localStorage.setItem('kando_wallpaper', val || '')
+      // Clear any saved custom upload when switching to a preset
+      localStorage.removeItem(CUSTOM_WP_KEY)
     }
   }
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0]
     if (!file) return
-    const url = URL.createObjectURL(file)
-    setWallpaper(url)
-    // Can't persist blob URLs across sessions; clear any saved preset
-    localStorage.removeItem('kando_wallpaper')
-    // Reset file input so the same file can be re-uploaded if needed
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const base64 = event.target.result // data:image/...;base64,...
+      setWallpaper(base64)
+      // Persist as base64 so it survives page refreshes
+      try {
+        localStorage.setItem(CUSTOM_WP_KEY, base64)
+        // Clear any preset wallpaper so the custom one takes priority on reload
+        localStorage.removeItem('kando_wallpaper')
+      } catch {
+        // localStorage quota exceeded (large images) — still works this session
+        console.warn('Could not persist wallpaper to localStorage (image may be too large).')
+      }
+    }
+    reader.readAsDataURL(file)
     e.target.value = ''
   }
 

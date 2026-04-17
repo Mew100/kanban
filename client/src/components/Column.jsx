@@ -38,6 +38,17 @@ function Column({ columnId, cards, onCardCreated, onCardDeleted, dark, customLab
         </span>
       </h2>
 
+      {/* New card form sits above the card list */}
+      <div style={{ flexShrink: 0 }}>
+        <NewCardForm
+          columnId={columnId}
+          onCardCreated={onCardCreated}
+          dark={dark}
+          customLabels={customLabels}
+          onAddCustomLabel={onAddCustomLabel}
+        />
+      </div>
+
       <Droppable droppableId={columnId}>
         {(provided) => (
           <div
@@ -48,7 +59,7 @@ function Column({ columnId, cards, onCardCreated, onCardDeleted, dark, customLab
               maxHeight: 'calc(100vh - 240px)',
               overflowY: 'auto',
               overflowX: 'hidden',
-              /* Subtle scrollbar styling */
+              marginTop: '0.5rem',
               scrollbarWidth: 'thin',
               scrollbarColor: dark ? '#475569 transparent' : '#cbd5e1 transparent',
             }}
@@ -67,16 +78,6 @@ function Column({ columnId, cards, onCardCreated, onCardDeleted, dark, customLab
           </div>
         )}
       </Droppable>
-
-      <div style={{ flexShrink: 0 }}>
-        <NewCardForm
-          columnId={columnId}
-          onCardCreated={onCardCreated}
-          dark={dark}
-          customLabels={customLabels}
-          onAddCustomLabel={onAddCustomLabel}
-        />
-      </div>
     </div>
   )
 }
