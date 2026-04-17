@@ -18,9 +18,9 @@ git clone https://github.com/Mew100/kanban.git
 cd kanban
 
 ### 2. Start the backend
-cd server
-npm install
-npm run dev
+> cd server
+> npm install
+> npm run dev
 
 ### 3. Start the frontend (new terminal)
 cd client
