@@ -3,10 +3,12 @@ import axios from 'axios'
 import { formatDistanceToNow, isPast, parseISO } from 'date-fns'
 
 const LABEL_COLORS = {
-  feature: '#4CAF50',
-  bug: '#f44336',
-  urgent: '#FF9800',
-  design: '#9C27B0',
+  finished:   '#4CAF50',   // green
+  upcoming:   '#F9C74F',   // yellow
+  'at-risk':  '#FF9800',   // orange
+  overdue:    '#f44336',   // red
+  'in-progress': '#b39ddb', // light violet
+  'on-track': '#2196F3',   // blue
 }
 
 function Card({ card, index, onCardDeleted }) {
