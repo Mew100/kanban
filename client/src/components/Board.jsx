@@ -5,7 +5,7 @@ import Column from './Column'
 
 const COLUMNS = ['todo', 'inprogress', 'done']
 
-function Board() {
+function Board({search}) {
     const [cards, setCards] = useState([])
 
     //Fetch all cards from backend
@@ -15,7 +15,10 @@ function Board() {
 
     //Group cards by column
     const getCardsByColumn = (column) => 
-        cards.filter(card => card.column_name === column)
+        cards.filter(card => 
+            card.column_name === column &&
+            card.title.toLowerCase().includes(search.toLowerCase())
+        )
 
     //Called when a card is dropped to a new column
     const handleDragEnd = async (result) => {
@@ -26,6 +29,7 @@ function Board() {
         
         //Update backend
         await axios.patch(`/api/cards/${draggableId}`, {column_name: newColumn})
+    
 
         //Update local state
         setCards(prev => 

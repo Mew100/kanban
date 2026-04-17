@@ -8,7 +8,7 @@ function Card({card, index, onCardDeleted}) {
     }
 
     return (
-        <Draggable draggbleId={String(card.id)} index={index}>
+        <Draggable draggableId={String(card.id)} index={index}>
             {(provided) => (
                 <div
                     ref={provided.innerRef}
