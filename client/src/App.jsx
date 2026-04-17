@@ -3,7 +3,7 @@ import Board from './components/Board'
 import logo from './assets/logo.png'
 
 const WALLPAPERS = [
-  { label: 'None', value: null },
+  { label: 'None', value: '' },
   { label: 'Ocean', value: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&q=80' },
   { label: 'Forest', value: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=80' },
   { label: 'Mountains', value: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80' },
@@ -12,17 +12,60 @@ const WALLPAPERS = [
 
 function App() {
   const [search, setSearch] = useState('')
-  const [dark, setDark] = useState(false)
-  const [wallpaper, setWallpaper] = useState(null)
+
+  // Persist dark mode to localStorage
+  const [dark, setDark] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('kando_dark') ?? 'false') } catch { return false }
+  })
+
+  // Persist wallpaper to localStorage
+  const [wallpaper, setWallpaper] = useState(() => {
+    try { return localStorage.getItem('kando_wallpaper') || null } catch { return null }
+  })
+
+  // Controlled select value so "Upload image..." can be chosen repeatedly
+  const [wallpaperSelect, setWallpaperSelect] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kando_wallpaper') || ''
+      // Only pre-select if it's one of the preset values
+      return WALLPAPERS.find(w => w.value === saved) ? saved : ''
+    } catch { return '' }
+  })
+
   const [showAbout, setShowAbout] = useState(false)
   const fileInputRef = useRef(null)
+
+  // Persist custom labels to localStorage
+  const [customLabels, setCustomLabels] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('kando_custom_labels') || '[]') } catch { return [] }
+  })
+
+  const handleAddCustomLabel = (label) => {
+    setCustomLabels(prev => {
+      const updated = [...prev, label]
+      localStorage.setItem('kando_custom_labels', JSON.stringify(updated))
+      return updated
+    })
+  }
+
+  const toggleDark = () => {
+    setDark(d => {
+      const next = !d
+      localStorage.setItem('kando_dark', JSON.stringify(next))
+      return next
+    })
+  }
 
   const handleWallpaperChange = (e) => {
     const val = e.target.value
     if (val === '__upload__') {
+      // Reset select so the same option can be chosen again next time
+      setWallpaperSelect('')
       fileInputRef.current.click()
     } else {
+      setWallpaperSelect(val)
       setWallpaper(val || null)
+      localStorage.setItem('kando_wallpaper', val || '')
     }
   }
 
@@ -31,6 +74,10 @@ function App() {
     if (!file) return
     const url = URL.createObjectURL(file)
     setWallpaper(url)
+    // Can't persist blob URLs across sessions; clear any saved preset
+    localStorage.removeItem('kando_wallpaper')
+    // Reset file input so the same file can be re-uploaded if needed
+    e.target.value = ''
   }
 
   const navBg = dark ? 'rgba(15,15,30,0.92)' : 'rgba(0,82,155,0.95)'
@@ -65,6 +112,7 @@ function App() {
         {/* Left: search */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <input
+            className="nav-search"
             type="text"
             placeholder="Search cards..."
             value={search}
@@ -78,7 +126,6 @@ function App() {
               outline: 'none',
             }}
           />
-          <style>{`input::placeholder { color: rgba(255,255,255,0.75); }`}</style>
         </div>
 
         {/* Center: logo */}
@@ -94,6 +141,7 @@ function App() {
 
           {/* Wallpaper select */}
           <select
+            value={wallpaperSelect}
             onChange={handleWallpaperChange}
             style={{
               padding: '0.3rem 0.5rem', borderRadius: '4px',
@@ -105,12 +153,12 @@ function App() {
             }}
           >
             {WALLPAPERS.map(w => (
-              <option key={w.label} value={w.value || ''} style={{ background: '#1e3a5f', color: 'white' }}>
+              <option key={w.label} value={w.value} style={{ background: '#1e3a5f', color: 'white' }}>
                 {w.label}
               </option>
             ))}
             <option value="__upload__" style={{ background: '#1e3a5f', color: 'white' }}>
-               Upload image...
+              📁 Upload image...
             </option>
           </select>
 
@@ -125,7 +173,7 @@ function App() {
 
           {/* Dark mode toggle */}
           <button
-            onClick={() => setDark(d => !d)}
+            onClick={toggleDark}
             style={{
               background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.4)',
               borderRadius: '4px', padding: '0.35rem 0.75rem',
@@ -149,9 +197,14 @@ function App() {
         </div>
       </div>
 
-      {/* Board — centered */}
+      {/* Board */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'center' }}>
-        <Board search={search} dark={dark} />
+        <Board
+          search={search}
+          dark={dark}
+          customLabels={customLabels}
+          onAddCustomLabel={handleAddCustomLabel}
+        />
       </div>
 
       {/* About modal */}

@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useState } from 'react'
 import { formatDistanceToNow, isPast, parseISO } from 'date-fns'
 
-const LABEL_COLORS = {
+const DEFAULT_LABEL_COLORS = {
   finished:     '#4CAF50',
   upcoming:     '#F9C74F',
   'at-risk':    '#FF9800',
@@ -12,7 +12,7 @@ const LABEL_COLORS = {
   'on-track':   '#2196F3',
 }
 
-function Card({ card, index, onCardDeleted, dark }) {
+function Card({ card, index, onCardDeleted, dark, customLabels = [] }) {
   const [deleteHovered, setDeleteHovered] = useState(false)
 
   const handleDelete = async () => {
@@ -24,7 +24,23 @@ function Card({ card, index, onCardDeleted, dark }) {
   const createdAgo = card.created_at
     ? formatDistanceToNow(new Date(card.created_at + 'Z'), { addSuffix: true })
     : null
-  const labelColor = card.label ? LABEL_COLORS[card.label] : null
+
+  // Resolve label color from built-in map first, then fall back to custom labels
+  const getLabelColor = (label) => {
+    if (!label) return null
+    if (DEFAULT_LABEL_COLORS[label]) return DEFAULT_LABEL_COLORS[label]
+    const custom = customLabels.find(l => l.value === label)
+    return custom ? custom.color : null
+  }
+
+  const labelColor = getLabelColor(card.label)
+
+  // Resolve display name for label
+  const getLabelDisplay = (label) => {
+    if (!label) return label
+    const custom = customLabels.find(l => l.value === label)
+    return custom ? custom.display : label
+  }
 
   return (
     <Draggable draggableId={String(card.id)} index={index}>
@@ -52,10 +68,10 @@ function Card({ card, index, onCardDeleted, dark }) {
           <div style={{ padding: '0.75rem' }}>
 
             {/* Label badge */}
-            {card.label && labelColor && (
+            {card.label && (
               <span style={{
                 display: 'inline-block',
-                background: labelColor,
+                background: labelColor || '#888',
                 color: 'white',
                 fontSize: '0.7rem',
                 padding: '0.1rem 0.5rem',
@@ -63,7 +79,7 @@ function Card({ card, index, onCardDeleted, dark }) {
                 marginBottom: '0.4rem',
                 textTransform: 'capitalize'
               }}>
-                {card.label}
+                {getLabelDisplay(card.label)}
               </span>
             )}
 
