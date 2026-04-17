@@ -23,6 +23,7 @@ npm install
 npm run dev
 
 ### 3. Start the frontend (new terminal)
+from ~/kanban/server -> cd ..
 cd client
 npm install
 npm run dev
