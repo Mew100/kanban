@@ -37,7 +37,7 @@ function Board({ search, dark }) {
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div style={{ display: 'flex', gap: '1rem', padding: '1rem', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: '1rem', padding: '1.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
         {COLUMNS.map(col => (
           <Column
             key={col}

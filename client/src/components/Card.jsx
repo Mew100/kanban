@@ -1,29 +1,29 @@
 import { Draggable } from '@hello-pangea/dnd'
 import axios from 'axios'
+import { useState } from 'react'
 import { formatDistanceToNow, isPast, parseISO } from 'date-fns'
 
 const LABEL_COLORS = {
-  finished:   '#4CAF50',   // green
-  upcoming:   '#F9C74F',   // yellow
-  'at-risk':  '#FF9800',   // orange
-  overdue:    '#f44336',   // red
-  'in-progress': '#b39ddb', // light violet
-  'on-track': '#2196F3',   // blue
+  finished:     '#4CAF50',
+  upcoming:     '#F9C74F',
+  'at-risk':    '#FF9800',
+  overdue:      '#f44336',
+  'in-progress':'#b39ddb',
+  'on-track':   '#2196F3',
 }
 
-function Card({ card, index, onCardDeleted }) {
+function Card({ card, index, onCardDeleted, dark }) {
+  const [deleteHovered, setDeleteHovered] = useState(false)
+
   const handleDelete = async () => {
     await axios.delete(`/api/cards/${card.id}`)
     onCardDeleted(card.id)
   }
 
   const isOverdue = card.due_date && isPast(parseISO(card.due_date)) && card.column_name !== 'done'
-
-  // ✅ fix Bug 4: append 'Z' so JS treats the SQLite timestamp as UTC
   const createdAgo = card.created_at
     ? formatDistanceToNow(new Date(card.created_at + 'Z'), { addSuffix: true })
     : null
-
   const labelColor = card.label ? LABEL_COLORS[card.label] : null
 
   return (
@@ -34,22 +34,18 @@ function Card({ card, index, onCardDeleted }) {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           style={{
-            background: 'white',
+            background: dark ? '#1e1e2e' : 'white',
             borderRadius: '6px',
             marginBottom: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            boxShadow: dark ? '0 1px 4px rgba(0,0,0,0.4)' : '0 1px 3px rgba(0,0,0,0.1)',
             borderLeft: isOverdue ? '4px solid #f44336' : '4px solid transparent',
-            overflow: 'hidden',  // keeps the color strip inside the rounded corners
+            overflow: 'hidden',
             ...provided.draggableProps.style
           }}
         >
-          {/* Color strip at top of card based on label */}
+          {/* Color strip */}
           {labelColor && (
-            <div style={{
-              height: '6px',
-              background: labelColor,
-              width: '100%'
-            }} />
+            <div style={{ height: '6px', background: labelColor, width: '100%' }} />
           )}
 
           {/* Card body */}
@@ -71,39 +67,42 @@ function Card({ card, index, onCardDeleted }) {
               </span>
             )}
 
-            <strong style={{ display: 'block' }}>{card.title}</strong>
+            <strong style={{ display: 'block', color: dark ? '#f1f5f9' : '#1e293b' }}>
+              {card.title}
+            </strong>
 
             {card.description && (
-              <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: '#555' }}>
+              <p style={{ margin: '0.25rem 0', fontSize: '0.85rem', color: dark ? '#94a3b8' : '#555' }}>
                 {card.description}
               </p>
             )}
 
-            {/* Due date */}
             {card.due_date && (
-              <p style={{ fontSize: '0.75rem', color: isOverdue ? '#f44336' : '#888', marginTop: '0.25rem' }}>
-                {/* ✅ fix Bug 3: was 'coor' (typo), now 'color' */}
+              <p style={{ fontSize: '0.75rem', color: isOverdue ? '#f44336' : (dark ? '#94a3b8' : '#888'), marginTop: '0.25rem' }}>
                 📅 Due: {card.due_date}{isOverdue ? ' — Overdue' : ''}
               </p>
             )}
 
-            {/* Timestamp */}
             {createdAgo && (
-              <p style={{ fontSize: '0.7rem', color: '#bbb', marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.7rem', color: dark ? '#475569' : '#bbb', marginTop: '0.25rem' }}>
                 Created {createdAgo}
               </p>
             )}
 
             <button
               onClick={handleDelete}
+              onMouseEnter={() => setDeleteHovered(true)}
+              onMouseLeave={() => setDeleteHovered(false)}
               style={{
                 marginTop: '0.5rem',
-                color: '#999',
-                background: 'none',
+                color: deleteHovered ? '#fff' : '#999',
+                background: deleteHovered ? '#ef4444' : 'transparent',
                 border: 'none',
+                borderRadius: '4px',
                 cursor: 'pointer',
                 fontSize: '0.75rem',
-                padding: 0
+                padding: deleteHovered ? '0.2rem 0.5rem' : '0.2rem 0',
+                transition: 'all 0.15s ease',
               }}
             >
               🗑 Delete

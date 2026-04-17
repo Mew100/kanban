@@ -36,7 +36,7 @@ app.patch('/api/cards/:id', (req,res) => {
     ).run(
         title ?? card.title,
         description ?? card.description,
-        column_name ?? card.columm_name,
+        column_name ?? card.column_name,
         label ?? card.label,
         due_date ?? card.due_date,
         id
