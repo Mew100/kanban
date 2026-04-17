@@ -16,7 +16,7 @@ function Column({columnId, cards, onCardCreated, onCardDeleted}) {
             <Droppable droppableId={columnId}>
                 {(provided) => (
                     <div
-                        ref={provided.innerRed}
+                        ref={provided.innerRef}
                         {...provided.droppableProps}
                         style={{minHeight: '100px'}}
                     >
