@@ -29,7 +29,11 @@ jobs:
       - name: Verify server entry point exists
         run: |
           cd server
-          node -e "require('./index.js') || require('./server.js')" 2>/dev/null || echo "Entry point check skipped"
+          if [ -f index.js ] || [ -f server.js ]; then
+            echo "Entry point found"
+          else
+            echo "No entry point found" && exit 1
+          fi
 
   client-build:
     name: Client — Install & Build (Vite)
